@@ -1,0 +1,72 @@
+trigger: 
+ branches:
+   include:
+     - main
+     - feature/*
+
+pool: Azure Pipelines
+
+stages:
+  - stage: 
+    displayName: Build Infra
+    jobs:
+      - job: 
+        displayName: Build infra job
+        steps:
+        - task: TerraformInstaller@1
+          inputs:
+            terraformVersion: 'latest'
+   
+        - task: TerraformTask@5
+          inputs:
+            provider: 'azurerm'
+            command: 'init'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/Parent'
+            backendServiceArm: 'Rajat_Bhai'
+            backendAzureRmStorageAccountName: 'strtushar'
+            backendAzureRmContainerName: 'tushar'
+            backendAzureRmKey: 'tushar.tfstate'
+
+        - task: TerraformTask@5
+          inputs:
+              provider: 'azurerm'
+              command: 'validate'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/Parent'
+
+        - task: TerraformTask@5
+          inputs:
+            provider: 'azurerm'
+            command: 'plan'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/Parent'
+
+    
+  - stage: 
+    jobs:
+      - job: 
+        pool: server
+        steps:
+        - task: ManualValidation@1
+          inputs:
+            notifyUsers: 'tushartripathi21@gmail.com'
+            approvers: 'Tushar'
+
+  - stage: 
+    jobs:
+      - job: 
+        steps:
+          - task: TerraformTask@5
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/Parent'
+              backendServiceArm: 'Rajat_Bhai'
+              backendAzureRmStorageAccountName: 'strtushar'
+              backendAzureRmContainerName: 'tushar'
+              backendAzureRmKey: 'tushar.tfstate'
+
+          - task: TerraformTask@5
+            inputs:
+              provider: 'azurerm'
+              command: 'apply'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/Parent'
+              environmentServiceNameAzureRM: 'Rajat_Bhai'
